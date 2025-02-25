@@ -1,5 +1,5 @@
 ---
-- name: Pull Docker Image from Docker Hub
+- name: Pull Docker Image from Docker Hub and Run Container
   hosts: localhost
   remote_user: maitri
   become: false
@@ -11,8 +11,14 @@
         extra_args: --break-system-packages
         executable: pip3
 
+    - name: Start Docker service
+      service:
+        name: docker
+        state: started
+        enabled: true
+
     - name: Pull Docker Image
-      docker_image:
+      community.docker.docker_image:
         name: "mtrivedi1410/trialcalc"
         source: pull
       register: docker_pull_result
@@ -20,11 +26,12 @@
     - name: Display Docker Pull Result
       debug:
         var: docker_pull_result
-        
-    - name: Start Docker service
-      service:
-        name: docker
-        state: started
 
-    - name: Running container
-      shell: docker run -it -d --name calculator mtrivedi1410/trialcalc /bin/bash
+    - name: Run Docker container
+      community.docker.docker_container:
+        name: calculator
+        image: "mtrivedi1410/trialcalc"
+        state: started
+        interactive: yes
+        tty: yes
+        detach: yes
