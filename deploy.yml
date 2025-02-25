@@ -2,13 +2,31 @@
 - name: Pull Docker Image from Docker Hub
   hosts: localhost
   remote_user: maitri
-  become: false
+  become: true
   tasks:
 
-    - name: Install Python Docker SDK
-      pip:
+    - name: Ensure python3-venv is installed
+      apt:
+        name: python3-venv
+        state: present
+        update_cache: yes
+
+    - name: Create Python virtual environment
+      command: python3 -m venv /home/maitri/docker_venv
+      args:
+        creates: /home/maitri/docker_venv
+
+    - name: Install Python Docker SDK in virtual environment
+      shell: |
+        source /home/maitri/docker_venv/bin/activate
+        pip install docker
+      args:
+        executable: /bin/bash
+
+    - name: Start Docker service
+      service:
         name: docker
-        executable: pip3
+        state: started
 
     - name: Pull Docker Image
       docker_image:
@@ -19,16 +37,11 @@
     - name: Display Docker Pull Result
       debug:
         var: docker_pull_result
-        
-    - name: Start Docker service
-      service:
-        name: docker
-        state: started
 
     - name: Stop and remove existing container if running
       shell: |
         docker ps -a --format '{{ "{{" }} .Names {{ "}}" }}' | grep -w calculator && docker stop calculator && docker rm calculator || true
       ignore_errors: yes
 
-    - name: Running container
+    - name: Run Docker container
       shell: docker run -it -d --name calculator mtrivedi1410/trialcalc /bin/bash
