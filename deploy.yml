@@ -4,6 +4,12 @@
   remote_user: maitri
   become: false
   tasks:
+
+    - name: Install Python Docker SDK
+      pip:
+        name: docker
+        executable: pip3
+
     - name: Pull Docker Image
       docker_image:
         name: "mtrivedi1410/trialcalc"
@@ -18,5 +24,11 @@
       service:
         name: docker
         state: started
+
+    - name: Stop and remove existing container if running
+      shell: |
+        docker ps -a --format '{{ "{{" }} .Names {{ "}}" }}' | grep -w calculator && docker stop calculator && docker rm calculator || true
+      ignore_errors: yes
+
     - name: Running container
       shell: docker run -it -d --name calculator mtrivedi1410/trialcalc /bin/bash
