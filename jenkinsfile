@@ -38,26 +38,27 @@ pipeline {
             }
         }
 
-   stage('Run Ansible Playbook') {
-            steps {
-                script {
-                    ansiblePlaybook(
-                        playbook: 'deploy.yml',
-                        inventory: 'inventory'
-                     )
-                }
+     stage('Run Ansible Playbook') { 
+        steps {
+            script {
+              withEnv(["ANSIBLE_HOST_KEY_CHECKING=False"]) {   
+                ansiblePlaybook(
+                    playbook: 'deploy.yml',
+                    inventory: 'inventory'
+                )
             }
         }
-
     }
-    post {
+ }
+}
+ post {
         success {
-            mail to: 'trivedimaitri1@gmail.com',
+            mail to: 'rkumarsingh136@gmail.com',
                  subject: "Application Deployment SUCCESS: Build ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                  body: "The build was successful!"
         }
         failure {
-            mail to: 'trivedimaitri1@gmail.com',
+            mail to: 'rkumarsingh136@gmail.com',
                  subject: "Application Deployment FAILURE: Build ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                  body: "The build failed."
         }
@@ -65,4 +66,5 @@ pipeline {
             cleanWs()
         }
       }
-}
+    }
+
